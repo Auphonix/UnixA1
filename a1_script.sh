@@ -9,7 +9,7 @@
 # if this is not true, stop the program
 checkFiles()
 {
-    echo 'Program checking files exist...'
+    printf '\n-------Checking resources exist-------\n'
     for file in "${files[@]}" # Loop through all files
     do
         if [ -f $r_path$file ]; then # Check if file exists and is valid file
@@ -26,9 +26,7 @@ checkFiles()
 # information in it's respective variables
 loadDB()
 {
-    printf "\nLoading from the database\n"
-
-    count=0 # counts the number of entries in file
+    printf "\n----Loading user from the database-----\n"
 
     while IFS= read line
     do
@@ -40,15 +38,33 @@ loadDB()
         do
             if [ $is_uname -eq 1 ]; then # if token is username
                 is_uname=0
-                users[$count]=$token
+                users[$num_entries]=$token
             else
                 is_uname=1
-                hashes[$count]=$token
+                hashes[$num_entries]=$token
             fi
         done
-        echo "user: ${users[count]}         hash: ${hashes[count]}"
-        ((count++))
+        printf "user: ${users[num_entries]}\t\t\thash: ${hashes[num_entries]}\n"
+        ((num_entries++))
     done < "$r_path$db_data"
+}
+
+# This function loads a list of common passwords to find a match between user
+# password hashes
+commonPassSearch()
+{
+    printf "\n----Common password search-----\n"
+    while IFS= read line
+    do
+        try=$(echo "$guess" | sha256sum | awk '{print $1}')
+        if [ "$try" == "$pwhash" ] ; then
+            echo "The password is $guess"
+        fi
+        for i in $(seq 1 $num_entries)
+        do
+            pass_as_hash=$()
+        done
+    done < "$r_path$common_pass"
 }
 
 
@@ -60,6 +76,8 @@ common_pass="common_pass.txt"
 declare -a files=($db_data $common_pass);
 
 # Usernames and passwords
+num_entries=0 # the number of entries in file
+pass_found=0 # number of found password
 declare -a users
 declare -a hashes
 
@@ -72,3 +90,6 @@ checkFiles
 
 # Load files
 loadDB
+
+# 1st attempt to find passwords using common password list
+commonPassSearch

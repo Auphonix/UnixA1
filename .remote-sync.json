@@ -1,0 +1,15 @@
+{
+  "uploadOnSave": true,
+  "useAtomicWrites": false,
+  "deleteLocal": false,
+  "hostname": "jupiter.csit.rmit.edu.au",
+  "target": "/home/sh3/S3547463/unix_admin/a1",
+  "ignore": [
+    ".remote-sync.json",
+    ".git/**"
+  ],
+  "username": "s3547463",
+  "watch": [],
+  "transport": "scp",
+  "keyfile": "/Users/Danyon/.ssh/id_rsa"
+}
