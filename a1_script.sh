@@ -12,10 +12,10 @@ checkFiles()
     printf '\n-------Checking resources exist-------\n'
     for file in "${files[@]}" # Loop through all files
     do
-        if [ -f $r_path$file ]; then # Check if file exists and is valid file
+        if [ -f $dict_path$file ] || [ -f $r_path$file ]; then # Check if file exists and is valid file
             echo "$file exists"
         else
-            echo "$file doesn't exist"
+            echo "$file could not be found"
             exit 1
         fi
     done
@@ -51,35 +51,69 @@ loadDB()
 
 # This function loads a list of common passwords to find a match between user
 # password hashes
-commonPassSearch()
+commonHashSearch()
 {
-    printf "\n----Common password search-----\n"
+    printf "\n--------Common password search--------\n"
     while IFS= read line
     do
-        try=$(echo "$guess" | sha256sum | awk '{print $1}')
-        if [ "$try" == "$pwhash" ] ; then
-            echo "The password is $guess"
-        fi
-        for i in $(seq 1 $num_entries)
+        hash=$(echo -n "$line" | sha256sum | awk '{print $1}') # convert pass to hash
+
+        for ((i=0; i<$num_entries; i++)) # Cycle all user passwords
         do
-            pass_as_hash=$()
+            if [ "$hash" == "${hashes[$i]}" ]; then
+                ((pass_found++)) # Increment number of found password
+                per=$(echo "scale=2; 100*$pass_found/$num_entries" | bc -l) # get percentage
+                echo "user [${users[i]}] has password: $line. ($per% of DB complete) "
+                unset per
+            fi
+            #sleep 0.1 # Sleep to avoid
         done
     done < "$r_path$common_pass"
 }
 
+# This function performs a dictionary search on the hashes to find a match to user
+# password hashes
+dictionaryHashSearch()
+{
+    printf "\n-------Dictionary password search------\n"
+    while IFS= read line
+    do
+        hash=$(echo -n "$line" | sha256sum | awk '{print $1}') # convert pass to hash
+
+        for ((i=0; i<$num_entries; i++)) # Cycle all user passwords
+        do
+            if [ "$hash" == "${hashes[$i]}" ]; then
+                ((pass_found++)) # Increment number of found password
+                per=$(echo "scale=2; 100*$pass_found/$num_entries" | bc -l) # get percentage
+                echo "user [${users[i]}] has password: $line. ($per% of DB complete) "
+                unset per
+            fi
+            #sleep 0.1 # Sleep to avoid
+        done
+    done < "$dict_path$dict"
+}
+
+#This function performs a brute force attempt at finding the hashed password
+bruteForceSearch()
+{
+    printf "\n-------Bruteforce password search------\n"
+}
 
 
 # Files
 r_path="resources/" # Resource path
+dict_path="/home/el5/E20925/"
 db_data="db_data.txt"
+dict="linux.words"
 common_pass="common_pass.txt"
-declare -a files=($db_data $common_pass);
+declare -a files=($db_data $common_pass $dict);
 
 # Usernames and passwords
 num_entries=0 # the number of entries in file
 pass_found=0 # number of found password
 declare -a users
 declare -a hashes
+declare -a found
 
 
 
@@ -92,4 +126,9 @@ checkFiles
 loadDB
 
 # 1st attempt to find passwords using common password list
-commonPassSearch
+commonHashSearch
+
+# 2nd attempt perform a dictionary search
+dictionaryHashSearch
+
+bruteForceSearch
