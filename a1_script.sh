@@ -1,15 +1,19 @@
 #!/bin/bash
 
 # See if the specified files existt
-db_date = "db_data.txt"
-common_pass = "common_pass.txt"
-r_path = "resources/" # Resource path
+db_data="db_data.txt"
+common_pass="common_pass.txt"
+r_path="resources/" # Resource path
+declare -a files=($db_data $common_pass);
 
 
 
 echo 'Program checking files exist...'
-if [-f $r_path$db_data]; then
-    echo "File <$db_data> exists"
-else
-    echo "File <$db_data> doesn't exist"
-fi
+for file in "${files[@]}" # Loop through all files
+do
+    if [ -f $r_path$file ]; then # Check if file exists and is valid file
+        echo "$file exists"
+    else
+        echo "$file doesn't exist"
+    fi
+done
