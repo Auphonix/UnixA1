@@ -132,6 +132,16 @@ declare -a found
 
 
 
+# TODO
+# 1. Need to prevent double find passwords
+# 2. Need to stop the program once all passwords are found4
+# 3. There is an issue with the programming running multiple times... NO LEAD
+# 3. ^ Potentially solved. Do not save whilst program is running
+# 4. Common Pssword running 2 times
+# 5. Code cleanup and optimizing
+# 6. Check memory leaks + fix
+
+
 #------MAIN------#
 
 # Check files
