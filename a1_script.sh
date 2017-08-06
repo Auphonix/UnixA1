@@ -97,6 +97,21 @@ dictionaryHashSearch()
 bruteForceSearch()
 {
     printf "\n-------Bruteforce password search------\n"
+    for line in {a..z}{a..z}{a..z}
+    do
+        hash=$(echo -n "$line" | sha256sum | awk '{print $1}') # convert pass to hash
+
+        for ((i=0; i<$num_entries; i++)) # Cycle all user passwords
+        do
+            if [ "$hash" == "${hashes[$i]}" ]; then
+                ((pass_found++)) # Increment number of found password
+                per=$(echo "scale=2; 100*$pass_found/$num_entries" | bc -l) # get percentage
+                echo "user [${users[i]}] has password: $line. ($per% of DB complete) "
+                unset per
+            fi
+            #sleep 0.1 # Sleep to avoid
+        done
+    done
 }
 
 
@@ -131,4 +146,5 @@ commonHashSearch
 # 2nd attempt perform a dictionary search
 dictionaryHashSearch
 
+# 3rd attempt perform a brute force search
 bruteForceSearch
