@@ -26,7 +26,7 @@ checkFiles()
 # information in it's respective variables
 loadDB()
 {
-    printf "\n----Loading user from the database-----\n"
+    printf "\n---Loading users from the database----\n"
 
     while IFS= read line
     do
@@ -43,6 +43,7 @@ loadDB()
                 is_uname=1
                 hashes[$num_entries]=$token
             fi
+            found[$num_entries]=0
         done
         printf "user: ${users[num_entries]}\t\t\thash: ${hashes[num_entries]}\n"
         ((num_entries++))
@@ -61,10 +62,7 @@ commonHashSearch()
         for ((i=0; i<$num_entries; i++)) # Cycle all user passwords
         do
             if [ "$hash" == "${hashes[$i]}" ]; then
-                ((pass_found++)) # Increment number of found password
-                per=$(echo "scale=2; 100*$pass_found/$num_entries" | bc -l) # get percentage
-                echo "user [${users[i]}] has password: $line. ($per% of DB complete) "
-                unset per
+                passwordFound $line $i
             fi
             #sleep 0.1 # Sleep to avoid
         done
@@ -83,10 +81,7 @@ dictionaryHashSearch()
         for ((i=0; i<$num_entries; i++)) # Cycle all user passwords
         do
             if [ "$hash" == "${hashes[$i]}" ]; then
-                ((pass_found++)) # Increment number of found password
-                per=$(echo "scale=2; 100*$pass_found/$num_entries" | bc -l) # get percentage
-                echo "user [${users[i]}] has password: $line. ($per% of DB complete) "
-                unset per
+                passwordFound $line $i
             fi
             #sleep 0.1 # Sleep to avoid
         done
@@ -94,9 +89,10 @@ dictionaryHashSearch()
 }
 
 #This function performs a brute force attempt at finding the hashed password
-bruteForceSearch()
+bruteForceSearch() # Need to look into brute force
 {
     printf "\n-------Bruteforce password search------\n"
+
     for line in {a..z}{a..z}{a..z}
     do
         hash=$(echo -n "$line" | sha256sum | awk '{print $1}') # convert pass to hash
@@ -104,16 +100,40 @@ bruteForceSearch()
         for ((i=0; i<$num_entries; i++)) # Cycle all user passwords
         do
             if [ "$hash" == "${hashes[$i]}" ]; then
-                ((pass_found++)) # Increment number of found password
-                per=$(echo "scale=2; 100*$pass_found/$num_entries" | bc -l) # get percentage
-                echo "user [${users[i]}] has password: $line. ($per% of DB complete) "
-                unset per
+                passwordFound $line $i
             fi
             #sleep 0.1 # Sleep to avoid
         done
     done
 }
 
+# This is a helper method which deals with found passwords
+# $1 is plaintext password, $2 is user index
+passwordFound()
+{
+    if [ ${found[$2]} != 1 ]; then
+        ((pass_found++)) # Increment number of found passwords
+        found[$2]=1 # Signify user's hash at index has been found
+        per=$(echo "scale=2; 100*$pass_found/$num_entries" | bc -l) # get percentage
+        echo "user [${users[i]}] has password: $1. ($per% of DB complete) "
+        unset per
+    fi
+
+    # If all plaintexts found
+    if [ $pass_found -eq $num_entries ]; then
+        time_finished=$(date +%T)
+        end_seconds=$(date +%s)
+
+        printf "\n-------All Hashes Found------\n"
+        printf "Num hashes:\t\t$pass_found\n"
+        printf "Time started:\t\t$time_start\n"
+        printf "Time finshed:\t\t$time_finished\n"
+        printf "Elapsed time:\t\t$(($end_seconds - $start_seconds)) Seconds\n"
+
+        printf "\nProgram complete...\n\n"
+        exit 1
+    fi
+}
 
 # Files
 r_path="resources/" # Resource path
@@ -130,6 +150,8 @@ declare -a users
 declare -a hashes
 declare -a found
 
+time_start=$(date +%T)
+start_seconds=$(date +%s)
 
 
 # TODO
